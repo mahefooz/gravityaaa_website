@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>GravityAAA — Carrier-grade RADIUS + OSS/BSS · launching soon</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="GravityAAA is a carrier-grade RADIUS, billing, KYC and compliance platform for ISPs and MSOs. FreeRADIUS 3.2+, real-time CoA/DM, GST billing, DoT/TRAI/CERT-In compliance. Launching soon." />
+<link rel="icon" href="assets/ico/favicon-light.ico" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B0F14;
+    --ink-soft: #2b313b;
+    --paper: #F7F8FA;       /* page bg */
+    --paper-2: #FFFFFF;     /* card bg */
+    --paper-3: #EEF1F5;     /* subtle band */
+    --muted: #6b7280;
+    --muted-2: #9aa1ac;
+    --line: rgba(11,15,20,0.08);
+    --line-strong: rgba(11,15,20,0.16);
+    --blue: #1E6BFF;
+    --blue-soft: #4A85FF;
+    --blue-tint: #2E5BCC;   /* darker so it reads on white */
+    --blue-bg: #E8F0FF;
+    --green: #0E9F6E;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ---------- Background ---------- */
+  .bg-mesh {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(30,107,255,0.10), transparent 60%),
+      radial-gradient(900px 500px at 10% 110%, rgba(30,107,255,0.06), transparent 60%);
+  }
+  .bg-grid {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(to right, rgba(11,15,20,0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(11,15,20,0.045) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 80%);
+  }
+
+  /* ---------- Layout shell ---------- */
+  .shell {
+    position: relative; z-index: 1;
+    max-width: 1280px; margin: 0 auto;
+    padding: 28px 40px 48px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark { width: 32px; height: 32px; }
+  .brand-word {
+    font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .brand-word .aaa { color: var(--blue); font-weight: 800; }
+  .top-meta .item .mono { color: var(--muted); }
+  .top-meta .item .mono.live { color: var(--ink); }
+  .top-meta {
+    display: flex; align-items: center; gap: 28px;
+  }
+  .top-meta .item { display: flex; align-items: center; gap: 8px; }
+  .pulse {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--blue);
+    box-shadow: 0 0 0 0 rgba(30,107,255,0.6);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(30,107,255,0.6); }
+    70% { box-shadow: 0 0 0 10px rgba(30,107,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(30,107,255,0); }
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 64px;
+    align-items: center;
+    min-height: calc(100vh - 200px);
+    padding: 32px 0 48px;
+  }
+  .hero-copy { max-width: 620px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.02);
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+  .eyebrow .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
+
+  h1.headline {
+    font-size: clamp(44px, 5.6vw, 76px);
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    margin: 28px 0 24px;
+  }
+  h1.headline .em { font-weight: 800; color: var(--blue); }
+  h1.headline .stroke {
+    -webkit-text-stroke: 1px var(--ink);
+    color: transparent;
+  }
+  .sub {
+    font-size: 18px; line-height: 1.55; color: #3f4651;
+    max-width: 540px; margin: 0 0 32px;
+    text-wrap: pretty;
+  }
+
+  /* hero stat strip */
+  .hero-stats {
+    display: flex; gap: 28px; flex-wrap: wrap;
+    margin: 0 0 32px;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-stats .s { display: flex; flex-direction: column; gap: 4px; }
+  .hero-stats .v { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hero-stats .v { color: var(--ink); }
+  .hero-stats .v .unit { font-size: 13px; color: var(--muted); margin-left: 4px; font-weight: 400; }
+  .hero-stats .l { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+  /* ---------- Form ---------- */
+  .form {
+    display: flex; gap: 8px;
+    background: var(--paper-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 8px;
+    max-width: 540px;
+    box-shadow: 0 1px 0 rgba(11,15,20,0.04), 0 8px 24px -12px rgba(11,15,20,0.10);
+  }
+  .form input {
+    flex: 1;
+    background: transparent; border: 0; outline: 0;
+    color: var(--ink);
+    font: 16px 'Space Grotesk', sans-serif;
+    padding: 12px 14px;
+  }
+  .form input::placeholder { color: var(--muted-2); }
+  .form button {
+    background: var(--blue); color: #fff;
+    border: 0; border-radius: 6px;
+    padding: 12px 22px;
+    font: 500 15px 'Space Grotesk', sans-serif;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    transition: transform .12s ease, background .15s ease;
+  }
+  .form button:hover { background: #1657d6; }
+  .form button:active { transform: translateY(1px); }
+  .form .arrow { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+  .form-meta {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    margin-top: 14px; font-size: 13px; color: var(--muted);
+  }
+  .form-meta .check { color: var(--blue); }
+  .form-success {
+    display: none;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 1px dashed rgba(30, 107, 255, 0.35);
+    background: var(--blue-bg);
+    color: var(--blue-tint);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+
+  /* ---------- Hero visual (orbit mesh) ---------- */
+  .hero-visual {
+    position: relative;
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 540px;
+    justify-self: end;
+  }
+  .hero-visual .orbit-svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+  .core-glow {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(30,107,255,0.18), transparent 45%);
+    filter: blur(20px);
+    pointer-events: none;
+  }
+  .sat-label {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+  }
+  .sat-label .v { color: var(--blue); margin-left: 8px; }
+
+  /* ---------- Countdown ---------- */
+  .countdown-wrap {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin: 0 -40px;
+    padding: 32px 40px;
+  }
+  .countdown {
+    max-width: 1280px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 48px;
+  }
+  .countdown-left { display: flex; flex-direction: column; gap: 8px; }
+  .countdown-left .target {
+    font-size: 22px; font-weight: 500; letter-spacing: -0.01em;
+  }
+  .countdown-left .target .pin { color: var(--blue-soft); margin-left: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.1em; }
+  .timer { display: flex; gap: 8px; }
+  .timer .unit {
+    background: var(--paper-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 14px 18px;
+    min-width: 88px;
+    text-align: center;
+    box-shadow: 0 1px 0 rgba(11,15,20,0.03);
+  }
+  .timer .num {
+    font-size: 36px; font-weight: 600; letter-spacing: -0.02em;
+    line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .timer .lbl {
+    margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  }
+  .timer .sep { align-self: center; color: var(--muted-2); font-size: 24px; padding: 0 2px; }
+
+  /* ---------- Generic section ---------- */
+  section.block { padding: 96px 0; }
+  .section-head {
+    display: flex; align-items: end; justify-content: space-between;
+    margin-bottom: 40px; gap: 32px;
+  }
+  .section-head h2 {
+    font-size: clamp(28px, 3.4vw, 44px);
+    font-weight: 500; letter-spacing: -0.02em;
+    margin: 8px 0 0; max-width: 720px; line-height: 1.1;
+    text-wrap: balance;
+  }
+  .section-head .meta { text-align: right; flex-shrink: 0; }
+  .section-head .meta .count {
+    font-family: 'JetBrains Mono', monospace; color: var(--ink); font-size: 13px;
+  }
+  .section-head .meta .count .all { color: var(--muted); }
+
+  /* ---------- Pillars ---------- */
+  .pillars {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 rgba(11,15,20,0.03), 0 24px 48px -32px rgba(11,15,20,0.18);
+  }
+  .pillar {
+    background: var(--paper-2);
+    padding: 32px;
+    display: flex; flex-direction: column;
+    min-height: 320px;
+    position: relative;
+    transition: background .2s ease;
+  }
+  .pillar:hover { background: #FBFCFE; }
+  .pillar .num {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--muted); letter-spacing: 0.14em;
+  }
+  .pillar .node {
+    position: absolute; top: 28px; right: 28px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--blue);
+    box-shadow: 0 0 12px rgba(30,107,255,0.6);
+  }
+  .pillar h3 {
+    margin: 60px 0 12px;
+    font-size: 22px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .pillar p {
+    color: #4a525e; font-size: 15px; line-height: 1.55;
+    margin: 0 0 18px;
+  }
+  .pillar .tags {
+    margin-top: auto; display: flex; flex-wrap: wrap; gap: 6px;
+    padding-top: 16px; border-top: 1px dashed var(--line);
+  }
+  .pillar .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--blue-tint);
+    background: var(--blue-bg);
+    border: 1px solid rgba(30, 107, 255, 0.2);
+    padding: 4px 8px; border-radius: 4px;
+  }
+
+  /* ---------- Capabilities grid (deep features) ---------- */
+  .caps {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .cap {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+  }
+  .cap:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -16px rgba(11,15,20,0.18);
+  }
+  .cap .ix {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 0.12em;
+    margin-bottom: 14px; display: flex; justify-content: space-between;
+  }
+  .cap .ix .ok { color: var(--green); }
+  .cap h4 {
+    font-size: 15px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em;
+  }
+  .cap p { font-size: 13px; line-height: 1.5; color: #5a626d; margin: 0; }
+
+  /* ---------- Compliance band ---------- */
+  .compliance {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 40px;
+    align-items: center;
+    box-shadow: 0 1px 0 rgba(11,15,20,0.03), 0 24px 48px -32px rgba(11,15,20,0.18);
+  }
+  .compliance .left h3 {
+    font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 12px 0;
+    line-height: 1.15;
+  }
+  .compliance .left p { color: #4a525e; font-size: 14px; line-height: 1.55; margin: 0; }
+  .badges {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--line);
+    border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  }
+  .badge {
+    background: var(--paper-3);
+    padding: 18px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+    min-height: 96px;
+  }
+  .badge .code {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.12em; color: var(--blue);
+  }
+  .badge .desc { font-size: 13px; color: #3f4651; line-height: 1.4; }
+
+  /* ---------- Clients (platforms) ---------- */
+  .clients {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .client {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 28px;
+    display: flex; flex-direction: column; gap: 16px;
+    min-height: 200px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 1px 0 rgba(11,15,20,0.03);
+  }
+  .client::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(30,107,255,0.05), transparent 60%);
+    pointer-events: none;
+  }
+  .client .platform {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .client h4 { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.02em; }
+  .client p { font-size: 14px; color: #4a525e; line-height: 1.5; margin: 0; }
+  .client .stack {
+    margin-top: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--blue-tint);
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 40px;
+    padding: 32px 0 8px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 32px;
+  }
+  footer .left, footer .right { color: var(--muted); font-size: 13px; }
+  footer .right { text-align: right; }
+  footer .center { display: flex; gap: 24px; }
+  footer .center a {
+    color: var(--ink); font-size: 13px; opacity: 0.65;
+    transition: opacity .15s ease;
+  }
+  footer .center a:hover { opacity: 1; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    .caps { grid-template-columns: repeat(2, 1fr); }
+    .compliance { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 960px) {
+    .shell { padding: 24px 24px 40px; }
+    .hero { grid-template-columns: 1fr; gap: 48px; padding: 24px 0 40px; min-height: auto; }
+    .hero-visual { max-width: 380px; justify-self: start; }
+    .countdown-wrap { margin: 0 -24px; padding: 28px 24px; }
+    .countdown { grid-template-columns: 1fr; gap: 24px; }
+    .pillars, .clients { grid-template-columns: 1fr; }
+    .badges { grid-template-columns: repeat(2, 1fr); }
+    .timer .unit { min-width: 64px; padding: 12px 10px; }
+    .timer .num { font-size: 24px; }
+    .timer .sep { display: none; }
+    footer { grid-template-columns: 1fr; text-align: left; }
+    footer .right { text-align: left; }
+    .top-meta { display: none; }
+    section.block { padding: 64px 0; }
+    .section-head { flex-direction: column; align-items: flex-start; }
+    .section-head .meta { text-align: left; }
+  }
+  @media (max-width: 600px) {
+    .caps { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+
+<div class="shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/svg/icon-light.svg" alt="" />
+      <div class="brand-word">Gravity<span class="aaa">AAA</span></div>
+    </div>
+    <div class="top-meta">
+      <div class="item"><span class="pulse"></span><span class="mono live">Pre-launch · invite only</span></div>
+      <div class="item"><span class="mono">v0.9 · RC</span></div>
+      <div class="item"><span class="mono">DoT · TRAI · CERT-In ready</span></div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">
+        <span class="dot"></span>
+        <span class="label">Launching Q3 · 2026 · for ISPs &amp; MSOs</span>
+      </div>
+
+      <h1 class="headline">
+        Carrier-grade<br/>
+        <span class="em">RADIUS, billing</span><br/>
+        <span class="stroke">&amp; compliance.</span>
+      </h1>
+
+      <p class="sub">
+        GravityAAA is a single platform that runs your AAA, your plans, your invoicing,
+        your KYC and your DoT/TRAI/CERT-In obligations — built on FreeRADIUS 3.2+ with real-time CoA/DM
+        and 180-day NAT log retention out of the box.
+      </p>
+
+      <div class="hero-stats">
+        <div class="s">
+          <div class="v">3.2+<span class="unit">FreeRADIUS</span></div>
+          <div class="l">AAA core</div>
+        </div>
+        <div class="s">
+          <div class="v">&lt; 50<span class="unit">ms CoA/DM</span></div>
+          <div class="l">Real-time control</div>
+        </div>
+        <div class="s">
+          <div class="v">180+<span class="unit">days</span></div>
+          <div class="l">NAT log retention</div>
+        </div>
+        <div class="s">
+          <div class="v">N<span class="unit">tenants</span></div>
+          <div class="l">Single deployment</div>
+        </div>
+      </div>
+
+      <form class="form" id="signup">
+        <input type="email" placeholder="you@isp.in" required autocomplete="email" />
+        <button type="submit">Request access <span class="arrow">→</span></button>
+      </form>
+      <div class="form-meta">
+        <span><span class="check">✓</span> Pilot deployments</span>
+        <span><span class="check">✓</span> Migration support</span>
+        <span><span class="check">✓</span> No spam, ever</span>
+      </div>
+      <div class="form-success" id="success">
+        Thanks — you're on the list. We'll reach out from <strong>access@gravityaaa.com</strong>.
+      </div>
+    </div>
+
+    <!-- ORBIT MESH VISUAL -->
+    <div class="hero-visual">
+      <div class="core-glow"></div>
+      <svg class="orbit-svg" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#1E6BFF"/>
+            <stop offset="100%" stop-color="#0B2A6B"/>
+          </radialGradient>
+          <linearGradient id="meshGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7FA6FF" stop-opacity="1"/>
+            <stop offset="100%" stop-color="#1E6BFF" stop-opacity="0.7"/>
+          </linearGradient>
+        </defs>
+
+        <circle cx="200" cy="200" r="170" stroke="rgba(30,107,255,0.22)" stroke-width="1" stroke-dasharray="2 6"/>
+        <circle cx="200" cy="200" r="120" stroke="rgba(30,107,255,0.14)" stroke-width="1"/>
+
+        <g id="mesh-rotate" style="transform-origin: 200px 200px;">
+          <g stroke="url(#meshGrad)" stroke-width="2.5" stroke-linecap="round">
+            <line x1="80" y1="140" x2="320" y2="140" />
+            <line x1="80" y1="140" x2="200" y2="340" />
+            <line x1="320" y1="140" x2="200" y2="340" />
+            <line x1="80" y1="140" x2="200" y2="200" stroke-opacity="0.7"/>
+            <line x1="320" y1="140" x2="200" y2="200" stroke-opacity="0.7"/>
+            <line x1="200" y1="340" x2="200" y2="200" stroke-opacity="0.7"/>
+          </g>
+          <g>
+            <circle cx="80" cy="140" r="14" fill="#1E6BFF"/>
+            <circle cx="80" cy="140" r="14" fill="none" stroke="#7FA6FF" stroke-opacity="0.4" stroke-width="2">
+              <animate attributeName="r" values="14;22;14" dur="3s" repeatCount="indefinite"/>
+              <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="3s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="320" cy="140" r="14" fill="#1E6BFF"/>
+            <circle cx="320" cy="140" r="14" fill="none" stroke="#7FA6FF" stroke-opacity="0.4" stroke-width="2">
+              <animate attributeName="r" values="14;22;14" dur="3s" begin="1s" repeatCount="indefinite"/>
+              <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="3s" begin="1s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="200" cy="340" r="14" fill="#1E6BFF"/>
+            <circle cx="200" cy="340" r="14" fill="none" stroke="#7FA6FF" stroke-opacity="0.4" stroke-width="2">
+              <animate attributeName="r" values="14;22;14" dur="3s" begin="2s" repeatCount="indefinite"/>
+              <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="3s" begin="2s" repeatCount="indefinite"/>
+            </circle>
+          </g>
+        </g>
+
+        <circle cx="200" cy="200" r="34" fill="url(#coreGrad)"/>
+        <circle cx="200" cy="200" r="12" fill="#0B0F14"/>
+        <circle cx="200" cy="200" r="6" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+      </svg>
+
+      <div class="sat-label" style="left: 20%; top: 35%;">AAA<span class="v">// freeradius</span></div>
+      <div class="sat-label" style="left: 80%; top: 35%;">BILLING<span class="v">// gst+upi</span></div>
+      <div class="sat-label" style="left: 50%; top: 85%;">COMPLIANCE<span class="v">// dot+li</span></div>
+    </div>
+  </section>
+
+  <!-- COUNTDOWN -->
+  <div class="countdown-wrap">
+    <div class="countdown">
+      <div class="countdown-left">
+        <div class="mono">T-MINUS · public release</div>
+        <div class="target">August 14, 2026 <span class="pin">09:00 IST · Bengaluru</span></div>
+      </div>
+      <div class="timer" id="timer">
+        <div class="unit"><div class="num" data-d>00</div><div class="lbl">Days</div></div>
+        <div class="sep">:</div>
+        <div class="unit"><div class="num" data-h>00</div><div class="lbl">Hours</div></div>
+        <div class="sep">:</div>
+        <div class="unit"><div class="num" data-m>00</div><div class="lbl">Minutes</div></div>
+        <div class="sep">:</div>
+        <div class="unit"><div class="num" data-s>00</div><div class="lbl">Seconds</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PILLARS -->
+  <section class="block">
+    <div class="section-head">
+      <div>
+        <div class="mono">Three nodes · one source of truth</div>
+        <h2>One platform. AAA, billing and compliance — never out of sync.</h2>
+      </div>
+      <div class="meta">
+        <div class="count"><span class="all">module </span>03 / 03</div>
+      </div>
+    </div>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="node"></div>
+        <div class="num">01 — AAA</div>
+        <h3>FreeRADIUS, productionised.</h3>
+        <p>FreeRADIUS 3.2+ with PPPoE, IPoE and static IP support. Concurrent-session control, real-time CoA/DM, and accounting that survives BNG restarts.</p>
+        <div class="tags">
+          <span class="tag">PPPoE</span>
+          <span class="tag">IPoE</span>
+          <span class="tag">Static IP</span>
+          <span class="tag">CoA / DM</span>
+        </div>
+      </div>
+      <div class="pillar">
+        <div class="node"></div>
+        <div class="num">02 — OSS / BSS</div>
+        <h3>Plans, billing &amp; collections.</h3>
+        <p>Unlimited, capped, FUP multi-tier, time-of-day, shared/family and top-ups. GST-compliant invoicing, dunning, and four payment rails including UPI AutoPay.</p>
+        <div class="tags">
+          <span class="tag">GST</span>
+          <span class="tag">Razorpay</span>
+          <span class="tag">PayU</span>
+          <span class="tag">Cashfree</span>
+          <span class="tag">UPI AutoPay</span>
+        </div>
+      </div>
+      <div class="pillar">
+        <div class="node"></div>
+        <div class="num">03 — Compliance</div>
+        <h3>Audit-ready, by default.</h3>
+        <p>DoT, TRAI, CERT-In and GDPR coverage. Lawful intercept hooks, NAT logging with 180+ day retention, signed audit trails and one-click regulator exports.</p>
+        <div class="tags">
+          <span class="tag">DoT</span>
+          <span class="tag">TRAI</span>
+          <span class="tag">CERT-In</span>
+          <span class="tag">GDPR</span>
+          <span class="tag">LI</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAPABILITIES -->
+  <section class="block">
+    <div class="section-head">
+      <div>
+        <div class="mono">Inside the box</div>
+        <h2>Everything an ISP or MSO needs, in one deployment.</h2>
+      </div>
+      <div class="meta">
+        <div class="count"><span class="all">capability </span>08 / 08</div>
+      </div>
+    </div>
+
+    <div class="caps">
+      <div class="cap">
+        <div class="ix"><span>01 / PLAN ENGINE</span><span class="ok">●</span></div>
+        <h4>Multi-tier FUP &amp; ToD</h4>
+        <p>Unlimited, capped, FUP-tiered, time-of-day, shared and family plans. Top-ups settle in seconds.</p>
+      </div>
+      <div class="cap">
+        <div class="ix"><span>02 / SESSION CONTROL</span><span class="ok">●</span></div>
+        <h4>Concurrent + CoA</h4>
+        <p>Per-subscriber session caps with real-time disconnect, throttle and re-auth via CoA / Disconnect-Message.</p>
+      </div>
+      <div class="cap">
+        <div class="ix"><span>03 / KYC</span><span class="ok">●</span></div>
+        <h4>Aadhaar eKYC + liveness</h4>
+        <p>Physical KYC, Aadhaar eKYC and on-device liveness in one workflow. DoT-compliant audit on every onboarding.</p>
+      </div>
+      <div class="cap">
+        <div class="ix"><span>04 / BILLING</span><span class="ok">●</span></div>
+        <h4>GST + dunning</h4>
+        <p>HSN/SAC-aware invoicing, partial payments, dunning ladders, proration and credit notes — done right.</p>
+      </div>
+      <div class="cap">
+        <div class="ix"><span>05 / PAYMENTS</span><span class="ok">●</span></div>
+        <h4>4 gateways + UPI AutoPay</h4>
+        <p>Razorpay, PayU, Cashfree and native UPI AutoPay mandates. Failover routing keeps collections alive.</p>
+      </div>
+      <div class="cap">
+        <div class="ix"><span>06 / MULTI-TENANT</span><span class="ok">●</span></div>
+        <h4>Many ISPs, one stack</h4>
+        <p>Logical isolation of data, billing, branding and reports. White-label for resellers, MSOs and franchisees.</p>
+      </div>
+      <div class="cap">
+        <div class="ix"><span>07 / LAWFUL INTERCEPT</span><span class="ok">●</span></div>
+        <h4>LI + NAT logs · 180d</h4>
+        <p>Lawful-intercept hooks and NAT translation logs retained for 180+ days. Regulator export in one command.</p>
+      </div>
+      <div class="cap">
+        <div class="ix"><span>08 / API-FIRST</span><span class="ok">●</span></div>
+        <h4>OpenAPI everywhere</h4>
+        <p>Every screen is an API. Webhook fanout, signed events, and SDKs for the languages your ops team actually uses.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPLIANCE BAND -->
+  <section class="block" style="padding-top: 40px;">
+    <div class="compliance">
+      <div class="left">
+        <div class="mono">Compliance</div>
+        <h3>Pass an audit on a Tuesday afternoon.</h3>
+        <p>Every subscriber action, session and payment is sequenced and signed. Exports for the regulator that asked yesterday — and the one that's asking next quarter.</p>
+      </div>
+      <div class="badges">
+        <div class="badge"><div class="code">DoT</div><div class="desc">Department of Telecom UL/ISP licence reporting</div></div>
+        <div class="badge"><div class="code">TRAI</div><div class="desc">QoS &amp; subscriber metric submissions</div></div>
+        <div class="badge"><div class="code">CERT-In</div><div class="desc">180-day log retention &amp; incident reporting</div></div>
+        <div class="badge"><div class="code">GDPR</div><div class="desc">Data subject rights &amp; processor agreements</div></div>
+        <div class="badge"><div class="code">LI</div><div class="desc">Lawful intercept hooks for authorised agencies</div></div>
+        <div class="badge"><div class="code">NAT log</div><div class="desc">Per-flow translation logs, queryable</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLIENTS -->
+  <section class="block">
+    <div class="section-head">
+      <div>
+        <div class="mono">Clients</div>
+        <h2>Same APIs. Native everywhere your team and your subscribers live.</h2>
+      </div>
+      <div class="meta">
+        <div class="count"><span class="all">platform </span>03 / 03</div>
+      </div>
+    </div>
+
+    <div class="clients">
+      <div class="client">
+        <div class="platform">Web · admin + self-care</div>
+        <h4>Next.js console</h4>
+        <p>Operator console, reseller portal and subscriber self-care — server-rendered, multi-tenant aware, dark by default.</p>
+        <div class="stack">next.js · react · typescript</div>
+      </div>
+      <div class="client">
+        <div class="platform">Android</div>
+        <h4>Jetpack Compose app</h4>
+        <p>Recharge, KYC, usage, support and AutoPay mandates. Material 3 with offline-first session reads.</p>
+        <div class="stack">kotlin · jetpack compose</div>
+      </div>
+      <div class="client">
+        <div class="platform">iOS</div>
+        <h4>SwiftUI app</h4>
+        <p>Native iOS feel for the same flows. Push for usage alerts, dunning, and CoA-driven session changes.</p>
+        <div class="stack">swift · swiftui</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="left">© 2026 GravityAAA · Carrier-grade RADIUS &amp; OSS/BSS</div>
+    <div class="center">
+      <a href="#">Architecture</a>
+      <a href="#">Compliance</a>
+      <a href="#">Pricing</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="right">hello@gravityaaa.com</div>
+  </footer>
+
+</div>
+
+<script>
+  // ---- Countdown ----
+  const target = new Date('2026-08-14T09:00:00+05:30').getTime();
+  const els = {
+    d: document.querySelector('[data-d]'),
+    h: document.querySelector('[data-h]'),
+    m: document.querySelector('[data-m]'),
+    s: document.querySelector('[data-s]'),
+  };
+  function pad(n) { return String(Math.max(0, n)).padStart(2, '0'); }
+  function tick() {
+    const now = Date.now();
+    let diff = Math.max(0, target - now);
+    const d = Math.floor(diff / (1000*60*60*24)); diff -= d*86400000;
+    const h = Math.floor(diff / (1000*60*60));    diff -= h*3600000;
+    const m = Math.floor(diff / (1000*60));       diff -= m*60000;
+    const s = Math.floor(diff / 1000);
+    els.d.textContent = pad(d);
+    els.h.textContent = pad(h);
+    els.m.textContent = pad(m);
+    els.s.textContent = pad(s);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // ---- Mesh slow rotation ----
+  const mesh = document.getElementById('mesh-rotate');
+  let angle = 0;
+  function rotate() {
+    angle = (angle + 0.06) % 360;
+    mesh.style.transform = `rotate(${angle}deg)`;
+    requestAnimationFrame(rotate);
+  }
+  rotate();
+
+  // ---- Form ----
+  const form = document.getElementById('signup');
+  const success = document.getElementById('success');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = form.querySelector('input').value.trim();
+    if (!email) return;
+    success.style.display = 'block';
+    form.querySelector('input').value = '';
+    success.innerHTML = `Thanks — <strong>${email}</strong> is on the list. We'll reach out from <strong>access@gravityaaa.com</strong>.`;
+  });
+</script>
+</body>
+</html>
